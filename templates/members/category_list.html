@@ -1,0 +1,78 @@
+{% extends 'base.html' %}
+
+{% block title %}Patron Categories - LibraSys{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div class="flex items-center justify-between mb-8">
+        <div>
+            <h1 class="text-2xl md:text-3xl font-bold text-gray-900">Patron Categories</h1>
+            <p class="text-gray-500 mt-1">Manage membership categories and their privileges</p>
+        </div>
+        <a href="{% url 'members:category_create' %}"
+           class="bg-primary-600 hover:bg-primary-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition flex items-center gap-2">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+            </svg>
+            Add Category
+        </a>
+    </div>
+
+    {% if categories %}
+        <div class="bg-white rounded-xl shadow-sm overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm">
+                    <thead class="bg-gray-50 border-b border-gray-200">
+                        <tr>
+                            <th class="text-left py-4 px-6 font-medium text-gray-500">Category</th>
+                            <th class="text-center py-4 px-6 font-medium text-gray-500">Max Books</th>
+                            <th class="text-center py-4 px-6 font-medium text-gray-500 hidden sm:table-cell">Loan Period</th>
+                            <th class="text-center py-4 px-6 font-medium text-gray-500 hidden md:table-cell">Renewals</th>
+                            <th class="text-center py-4 px-6 font-medium text-gray-500 hidden lg:table-cell">Daily Fine</th>
+                            <th class="text-center py-4 px-6 font-medium text-gray-500 hidden lg:table-cell">Max Fine</th>
+                            <th class="text-center py-4 px-6 font-medium text-gray-500">Status</th>
+                            <th class="text-right py-4 px-6 font-medium text-gray-500">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-100">
+                        {% for category in categories %}
+                            <tr class="hover:bg-gray-50 transition">
+                                <td class="py-4 px-6">
+                                    <p class="font-medium text-gray-900">{{ category.name }}</p>
+                                    {% if category.description %}
+                                        <p class="text-xs text-gray-500 mt-0.5">{{ category.description }}</p>
+                                    {% endif %}
+                                </td>
+                                <td class="py-4 px-6 text-center font-medium text-gray-900">{{ category.max_books_allowed }}</td>
+                                <td class="py-4 px-6 text-center text-gray-600 hidden sm:table-cell">{{ category.loan_period_days }} days</td>
+                                <td class="py-4 px-6 text-center text-gray-600 hidden md:table-cell">{{ category.max_renewals }} ({{ category.renewal_period_days }}d)</td>
+                                <td class="py-4 px-6 text-center text-gray-600 hidden lg:table-cell">${{ category.daily_fine_rate }}</td>
+                                <td class="py-4 px-6 text-center text-gray-600 hidden lg:table-cell">${{ category.max_fine_amount }}</td>
+                                <td class="py-4 px-6 text-center">
+                                    {% if category.is_active %}
+                                        <span class="bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs font-medium">Active</span>
+                                    {% else %}
+                                        <span class="bg-gray-100 text-gray-800 px-2 py-1 rounded-full text-xs font-medium">Inactive</span>
+                                    {% endif %}
+                                </td>
+                                <td class="py-4 px-6 text-right">
+                                    <a href="{% url 'members:category_update' category.pk %}"
+                                       class="text-primary-600 hover:text-primary-700 text-sm font-medium">Edit</a>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    {% else %}
+        <div class="text-center py-16 bg-white rounded-xl shadow-sm">
+            <svg class="w-16 h-16 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"></path>
+            </svg>
+            <h3 class="text-lg font-medium text-gray-900 mb-2">No categories found</h3>
+            <p class="text-gray-500">Create a patron category to define borrowing privileges.</p>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,111 @@
+{% extends 'base.html' %}
+
+{% block title %}Members - LibraSys{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-8 gap-4">
+        <div>
+            <h1 class="text-2xl md:text-3xl font-bold text-gray-900">Members</h1>
+            <p class="text-gray-500 mt-1">Manage library members</p>
+        </div>
+        <div class="flex gap-3 w-full sm:w-auto">
+            <form method="get" class="flex-grow sm:flex-grow-0">
+                <input type="text" name="search" value="{{ search }}"
+                       placeholder="Search members..."
+                       hx-get="{% url 'members:member_list' %}"
+                       hx-trigger="input changed delay:500ms"
+                       hx-target="#member-results"
+                       hx-swap="innerHTML"
+                       class="w-full sm:w-64 px-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500">
+            </form>
+            <a href="{% url 'members:member_create' %}"
+               class="bg-primary-600 hover:bg-primary-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition flex items-center gap-2 whitespace-nowrap">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                </svg>
+                Add Member
+            </a>
+        </div>
+    </div>
+
+    <div id="member-results">
+        {% if members %}
+            <div class="bg-white rounded-xl shadow-sm overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm">
+                        <thead class="bg-gray-50 border-b border-gray-200">
+                            <tr>
+                                <th class="text-left py-4 px-6 font-medium text-gray-500">Member</th>
+                                <th class="text-left py-4 px-6 font-medium text-gray-500 hidden md:table-cell">ID</th>
+                                <th class="text-left py-4 px-6 font-medium text-gray-500 hidden sm:table-cell">Category</th>
+                                <th class="text-left py-4 px-6 font-medium text-gray-500">Status</th>
+                                <th class="text-left py-4 px-6 font-medium text-gray-500 hidden lg:table-cell">Phone</th>
+                                <th class="text-right py-4 px-6 font-medium text-gray-500">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-100">
+                            {% for member in members %}
+                                <tr class="hover:bg-gray-50 transition">
+                                    <td class="py-4 px-6">
+                                        <div class="flex items-center gap-3">
+                                            {% if member.photo %}
+                                                <img src="{{ member.photo.url }}" alt="{{ member.user.get_full_name }}"
+                                                     class="w-10 h-10 rounded-full object-cover">
+                                            {% else %}
+                                                <div class="w-10 h-10 rounded-full bg-primary-100 flex items-center justify-center flex-shrink-0">
+                                                    <span class="text-primary-600 font-medium">{{ member.user.first_name|first }}{{ member.user.last_name|first }}</span>
+                                                </div>
+                                            {% endif %}
+                                            <div>
+                                                <p class="font-medium text-gray-900">{{ member.user.get_full_name }}</p>
+                                                <p class="text-xs text-gray-500">{{ member.user.email }}</p>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="py-4 px-6 font-mono text-gray-600 hidden md:table-cell">{{ member.membership_id }}</td>
+                                    <td class="py-4 px-6 text-gray-600 hidden sm:table-cell">{{ member.category.name }}</td>
+                                    <td class="py-4 px-6">
+                                        {% if member.status == 'active' %}
+                                            <span class="inline-flex items-center px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs font-medium">Active</span>
+                                        {% elif member.status == 'expired' %}
+                                            <span class="inline-flex items-center px-2 py-1 bg-gray-100 text-gray-800 rounded-full text-xs font-medium">Expired</span>
+                                        {% elif member.status == 'suspended' %}
+                                            <span class="inline-flex items-center px-2 py-1 bg-red-100 text-red-800 rounded-full text-xs font-medium">Suspended</span>
+                                        {% else %}
+                                            <span class="inline-flex items-center px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs font-medium">Pending</span>
+                                        {% endif %}
+                                        {% if member.is_blocked %}
+                                            <span class="inline-flex items-center px-2 py-1 bg-red-100 text-red-800 rounded-full text-xs font-medium ml-1">Blocked</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="py-4 px-6 text-gray-600 hidden lg:table-cell">{{ member.phone_number|default:"—" }}</td>
+                                    <td class="py-4 px-6 text-right">
+                                        <a href="{% url 'members:member_detail' member.pk %}"
+                                           class="text-primary-600 hover:text-primary-700 text-sm font-medium">View</a>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        {% else %}
+            <div class="text-center py-16 bg-white rounded-xl shadow-sm">
+                <svg class="w-16 h-16 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                </svg>
+                <h3 class="text-lg font-medium text-gray-900 mb-2">No members found</h3>
+                <p class="text-gray-500 mb-6">
+                    {% if search %}No results for "{{ search }}". Try a different search.{% else %}Get started by registering your first member.{% endif %}
+                </p>
+                {% if not search %}
+                    <a href="{% url 'members:member_create' %}" class="bg-primary-600 hover:bg-primary-700 text-white px-6 py-2.5 rounded-lg font-medium transition">
+                        Register First Member
+                    </a>
+                {% endif %}
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

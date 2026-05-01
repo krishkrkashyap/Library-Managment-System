@@ -1,0 +1,94 @@
+{% extends 'base.html' %}
+
+{% block title %}Active Loans - LibraSys{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div class="flex items-center justify-between mb-8">
+        <div>
+            <h1 class="text-2xl md:text-3xl font-bold text-gray-900">Active Loans</h1>
+            <p class="text-gray-500 mt-1">Currently borrowed books</p>
+        </div>
+        <div class="flex gap-3">
+            <a href="{% url 'circulation:issue_book' %}"
+               class="bg-primary-600 hover:bg-primary-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition flex items-center gap-2">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                </svg>
+                Issue Book
+            </a>
+            <a href="{% url 'circulation:return_book' %}"
+               class="bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 px-4 py-2 rounded-lg text-sm font-medium transition flex items-center gap-2">
+                Return Book
+            </a>
+        </div>
+    </div>
+
+    <div class="bg-white rounded-xl shadow-sm overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="w-full text-sm">
+                <thead class="bg-gray-50 border-b border-gray-200">
+                    <tr>
+                        <th class="text-left py-4 px-6 font-medium text-gray-500">Book</th>
+                        <th class="text-left py-4 px-6 font-medium text-gray-500">Member</th>
+                        <th class="text-left py-4 px-6 font-medium text-gray-500 hidden md:table-cell">Issue Date</th>
+                        <th class="text-left py-4 px-6 font-medium text-gray-500">Due Date</th>
+                        <th class="text-left py-4 px-6 font-medium text-gray-500 hidden sm:table-cell">Status</th>
+                        <th class="text-right py-4 px-6 font-medium text-gray-500">Action</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-100">
+                    {% for loan in loans %}
+                        <tr class="hover:bg-gray-50 transition {% if loan.is_overdue %}bg-red-50{% endif %}">
+                            <td class="py-4 px-6">
+                                <a href="{% url 'catalog:book_detail' loan.book_instance.book.slug %}" class="font-medium text-gray-900 hover:text-primary-600">
+                                    {{ loan.book_instance.book.title }}
+                                </a>
+                                <p class="text-xs text-gray-500 font-mono mt-0.5">{{ loan.book_instance.barcode }}</p>
+                            </td>
+                            <td class="py-4 px-6">
+                                <a href="{% url 'members:member_detail' loan.member.pk %}" class="text-primary-600 hover:text-primary-700">
+                                    {{ loan.member.user.get_full_name }}
+                                </a>
+                                <p class="text-xs text-gray-500 mt-0.5">{{ loan.member.membership_id }}</p>
+                            </td>
+                            <td class="py-4 px-6 text-gray-600 hidden md:table-cell">{{ loan.issue_date|date:"M d, Y" }}</td>
+                            <td class="py-4 px-6 text-gray-600">{{ loan.due_date|date:"M d, Y" }}</td>
+                            <td class="py-4 px-6 hidden sm:table-cell">
+                                {% if loan.is_overdue %}
+                                    <span class="bg-red-100 text-red-800 px-2 py-1 rounded-full text-xs font-medium">Overdue</span>
+                                {% else %}
+                                    <span class="bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs font-medium">On Time</span>
+                                {% endif %}
+                            </td>
+                            <td class="py-4 px-6 text-right">
+                                <div class="flex gap-2 justify-end">
+                                    {% if not loan.is_overdue %}
+                                        <button hx-post="{% url 'circulation:renew_loan' loan.pk %}"
+                                                hx-target="closest tr"
+                                                hx-swap="outerHTML"
+                                                hx-confirm="Renew this loan?"
+                                                class="text-primary-600 hover:text-primary-700 text-xs font-medium">
+                                            Renew
+                                        </button>
+                                    {% endif %}
+                                    <a href="{% url 'circulation:return_book' %}"
+                                       class="text-green-600 hover:text-green-700 text-xs font-medium">
+                                        Return
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="6" class="py-12 text-center text-gray-500">
+                                No active loans.
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

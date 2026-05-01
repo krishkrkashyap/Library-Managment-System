@@ -1,0 +1,77 @@
+{% extends 'base.html' %}
+
+{% block title %}My Holds - LibraSys{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <h1 class="text-2xl md:text-3xl font-bold text-gray-900 mb-6">My Holds</h1>
+
+    {% if active_holds %}
+        <div class="bg-white rounded-xl shadow-sm overflow-hidden mb-6">
+            <div class="p-6 border-b border-gray-100">
+                <h2 class="text-lg font-semibold text-gray-900">Active Holds</h2>
+            </div>
+            <div class="divide-y divide-gray-100">
+                {% for hold in active_holds %}
+                    <div class="p-6 flex items-center justify-between hover:bg-gray-50">
+                        <div>
+                            <a href="{% url 'catalog:book_detail' hold.book.slug %}"
+                               class="font-medium text-gray-900 hover:text-primary-600">
+                                {{ hold.book.title }}
+                            </a>
+                            <p class="text-sm text-gray-500 mt-1">
+                                Placed {{ hold.placed_date|date:"M d, Y" }}
+                                {% if hold.queue_position %} &middot; Position #{{ hold.queue_position }}{% endif %}
+                            </p>
+                        </div>
+                        <div class="flex items-center gap-4 ml-4">
+                            {% if hold.status == 'ready' %}
+                                <span class="bg-green-100 text-green-800 px-3 py-1 rounded-full text-xs font-medium">Ready for Pickup</span>
+                            {% else %}
+                                <span class="bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full text-xs font-medium">Pending</span>
+                            {% endif %}
+                            <button hx-post="{% url 'circulation:cancel_hold' hold.pk %}"
+                                    hx-confirm="Cancel this hold?"
+                                    class="text-red-600 hover:text-red-700 text-sm font-medium">
+                                Cancel
+                            </button>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    {% endif %}
+
+    {% if past_holds %}
+        <div class="bg-white rounded-xl shadow-sm overflow-hidden">
+            <div class="p-6 border-b border-gray-100">
+                <h2 class="text-lg font-semibold text-gray-900">Past Holds</h2>
+            </div>
+            <div class="divide-y divide-gray-100">
+                {% for hold in past_holds %}
+                    <div class="p-4 flex items-center justify-between">
+                        <div>
+                            <p class="font-medium text-gray-900">{{ hold.book.title }}</p>
+                            <p class="text-xs text-gray-500 mt-1">{{ hold.placed_date|date:"M d, Y" }}</p>
+                        </div>
+                        <span class="bg-gray-100 text-gray-600 px-2 py-1 rounded-full text-xs font-medium">
+                            {{ hold.get_status_display }}
+                        </span>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    {% endif %}
+
+    {% if not active_holds and not past_holds %}
+        <div class="text-center py-16 bg-white rounded-xl shadow-sm">
+            <svg class="w-16 h-16 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 1h4"></path>
+            </svg>
+            <h3 class="text-lg font-medium text-gray-900 mb-2">No Holds</h3>
+            <p class="text-gray-500">You haven't placed any holds yet.</p>
+            <a href="{% url 'catalog:book_list' %}" class="text-primary-600 hover:text-primary-700 text-sm font-medium mt-2 inline-block">Browse Catalog</a>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

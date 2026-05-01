@@ -1,0 +1,122 @@
+{% extends 'base.html' %}
+{% load humanize %}
+
+{% block title %}Home - LibraSys Library{% endblock %}
+
+{% block content %}
+<section class="bg-gradient-to-r from-primary-600 to-primary-800 text-white">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
+        <div class="text-center">
+            <h1 class="text-4xl md:text-5xl font-bold mb-4">Welcome to LibraSys</h1>
+            <p class="text-lg md:text-xl text-primary-100 mb-8 max-w-2xl mx-auto">
+                Discover thousands of books, manage your loans, and explore our growing collection.
+            </p>
+            <form action="{% url 'catalog:book_list' %}" method="get" class="max-w-xl mx-auto flex gap-2">
+                <input type="text" name="search" placeholder="Search by title, author, or ISBN..."
+                       class="flex-grow px-4 py-3 rounded-l-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-primary-300">
+                <button type="submit" class="bg-gray-900 hover:bg-gray-800 px-6 py-3 rounded-r-lg font-medium transition">
+                    Search
+                </button>
+            </form>
+        </div>
+    </div>
+</section>
+
+<section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+        <div class="bg-white rounded-xl shadow-md p-6 flex items-center gap-4">
+            <div class="bg-primary-100 p-4 rounded-lg">
+                <svg class="w-8 h-8 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
+                </svg>
+            </div>
+            <div>
+                <p class="text-3xl font-bold text-gray-900">{{ total_books|default:"0" }}</p>
+                <p class="text-gray-500">Total Books</p>
+            </div>
+        </div>
+        <div class="bg-white rounded-xl shadow-md p-6 flex items-center gap-4">
+            <div class="bg-green-100 p-4 rounded-lg">
+                <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+            </div>
+            <div>
+                <p class="text-3xl font-bold text-gray-900">{{ available_books|default:"0" }}</p>
+                <p class="text-gray-500">Available Now</p>
+            </div>
+        </div>
+        <div class="bg-white rounded-xl shadow-md p-6 flex items-center gap-4">
+            <div class="bg-purple-100 p-4 rounded-lg">
+                <svg class="w-8 h-8 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path>
+                </svg>
+            </div>
+            <div>
+                <p class="text-3xl font-bold text-gray-900">{{ total_members|default:"0" }}</p>
+                <p class="text-gray-500">Active Members</p>
+            </div>
+        </div>
+    </div>
+
+    {% if new_books %}
+    <div class="mb-12">
+        <div class="flex items-center justify-between mb-6">
+            <h2 class="text-2xl font-bold text-gray-900">New Arrivals</h2>
+            <a href="{% url 'catalog:book_list' %}" class="text-primary-600 hover:text-primary-700 font-medium">View All &rarr;</a>
+        </div>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {% for book in new_books %}
+                {% include 'components/book_card.html' with book=book %}
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    {% if featured_books %}
+    <div class="mb-12">
+        <div class="flex items-center justify-between mb-6">
+            <h2 class="text-2xl font-bold text-gray-900">Featured Books</h2>
+            <a href="{% url 'catalog:book_list' %}" class="text-primary-600 hover:text-primary-700 font-medium">View All &rarr;</a>
+        </div>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {% for book in featured_books %}
+                {% include 'components/book_card.html' with book=book %}
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    {% if popular_genres %}
+    <div class="mb-12">
+        <h2 class="text-2xl font-bold text-gray-900 mb-6">Browse by Genre</h2>
+        <div class="flex flex-wrap gap-3">
+            {% for genre in popular_genres %}
+                <a href="{% url 'catalog:genre_detail' genre.pk %}"
+                   class="bg-white rounded-full px-5 py-2 shadow-sm hover:shadow-md text-gray-700 hover:text-primary-600 transition border border-gray-200">
+                    {{ genre.name }}
+                    <span class="text-xs text-gray-400 ml-1">({{ genre.book_count }})</span>
+                </a>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    {% if not user.is_authenticated %}
+    <div class="bg-primary-50 rounded-2xl p-8 md:p-12 text-center">
+        <h2 class="text-2xl font-bold text-gray-900 mb-4">Get Started with LibraSys</h2>
+        <p class="text-gray-600 mb-6 max-w-xl mx-auto">
+            Create an account to borrow books, place holds, track your reading history, and manage your library experience.
+        </p>
+        <div class="flex flex-col sm:flex-row gap-4 justify-center">
+            <a href="{% url 'users:register' %}" class="bg-primary-600 hover:bg-primary-700 text-white px-8 py-3 rounded-lg font-medium transition">
+                Create Account
+            </a>
+            <a href="{% url 'users:login' %}" class="bg-white hover:bg-gray-50 text-primary-600 px-8 py-3 rounded-lg font-medium transition border border-primary-600">
+                Sign In
+            </a>
+        </div>
+    </div>
+    {% endif %}
+</section>
+{% endblock %}

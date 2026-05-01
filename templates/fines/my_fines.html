@@ -1,0 +1,54 @@
+{% extends 'base.html' %}
+{% load humanize %}
+
+{% block title %}My Fines - LibraSys{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <h1 class="text-2xl md:text-3xl font-bold text-gray-900 mb-6">My Fines</h1>
+
+    {% if fines %}
+        <div class="bg-white rounded-xl shadow-sm overflow-hidden mb-6">
+            <div class="p-6 border-b border-gray-100 bg-red-50">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm text-red-600">Total Outstanding</p>
+                        <p class="text-3xl font-bold text-red-700">${{ total|floatformat:2 }}</p>
+                    </div>
+                </div>
+            </div>
+            <div class="divide-y divide-gray-100">
+                {% for fine in fines %}
+                    <div class="p-6 flex items-center justify-between hover:bg-gray-50">
+                        <div class="flex-grow">
+                            <a href="{% url 'catalog:book_detail' fine.borrow_record.book_instance.book.slug %}"
+                               class="font-medium text-gray-900 hover:text-primary-600">
+                                {{ fine.borrow_record.book_instance.book.title }}
+                            </a>
+                            <p class="text-sm text-gray-500 mt-1">
+                                Issued {{ fine.issued_date|date:"M d, Y" }}
+                            </p>
+                        </div>
+                        <div class="flex items-center gap-4 ml-4">
+                            <p class="text-lg font-semibold text-gray-900">${{ fine.amount|floatformat:2 }}</p>
+                            <button hx-post="{% url 'fines:fine_payment' fine.pk %}"
+                                    hx-confirm="Pay this fine?"
+                                    class="bg-primary-600 hover:bg-primary-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition">
+                                Pay
+                            </button>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    {% else %}
+        <div class="text-center py-16 bg-white rounded-xl shadow-sm">
+            <svg class="w-16 h-16 text-green-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+            <h3 class="text-lg font-medium text-gray-900 mb-2">No Outstanding Fines</h3>
+            <p class="text-gray-500">Great job! You don't have any unpaid fines.</p>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

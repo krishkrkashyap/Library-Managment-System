@@ -1,0 +1,197 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Library Management System{% endblock %}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/htmx.org@1.9.12"></script>
+    <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            50: '#eff6ff',
+                            100: '#dbeafe',
+                            200: '#bfdbfe',
+                            300: '#93c5fd',
+                            400: '#60a5fa',
+                            500: '#3b82f6',
+                            600: '#2563eb',
+                            700: '#1d4ed8',
+                            800: '#1e40af',
+                            900: '#1e3a8a',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    {% block extra_head %}{% endblock %}
+</head>
+<body class="h-full bg-gray-50 flex flex-col">
+    <nav class="bg-white shadow-md sticky top-0 z-50" x-data="{ open: false }">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center">
+                    <a href="{% url 'catalog:book_list' %}" class="flex items-center gap-2">
+                        <svg class="w-8 h-8 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
+                        </svg>
+                        <span class="text-xl font-bold text-gray-900">LibraSys</span>
+                    </a>
+                    <div class="hidden md:ml-8 md:flex md:space-x-4">
+                        <a href="{% url 'catalog:book_list' %}" class="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:text-primary-600 hover:bg-primary-50 transition">Catalog</a>
+                        <a href="{% url 'catalog:author_list' %}" class="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:text-primary-600 hover:bg-primary-50 transition">Authors</a>
+                        <a href="{% url 'catalog:genre_list' %}" class="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:text-primary-600 hover:bg-primary-50 transition">Genres</a>
+                        {% if user.is_authenticated %}
+                            {% if user.is_staff_role %}
+                                <a href="{% url 'reports:staff_dashboard' %}" class="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:text-primary-600 hover:bg-primary-50 transition">Staff Dashboard</a>
+                                <a href="{% url 'members:member_list' %}" class="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:text-primary-600 hover:bg-primary-50 transition">Members</a>
+                                <a href="{% url 'circulation:active_loans' %}" class="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:text-primary-600 hover:bg-primary-50 transition">Circulation</a>
+                            {% else %}
+                                <a href="{% url 'members:patron_dashboard' %}" class="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:text-primary-600 hover:bg-primary-50 transition">My Account</a>
+                            {% endif %}
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="hidden md:flex items-center space-x-4">
+                    {% if user.is_authenticated %}
+                        {% if user.is_staff_role %}
+                            <a href="{% url 'acquisitions:suggestion_list' %}" class="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:text-primary-600 hover:bg-primary-50 transition">Suggestions</a>
+                        {% else %}
+                            <a href="{% url 'acquisitions:suggestion_form' %}" class="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:text-primary-600 hover:bg-primary-50 transition">Suggest a Book</a>
+                        {% endif %}
+                        <a href="{% url 'notifications:notification_list' %}" class="relative p-2 text-gray-600 hover:text-primary-600 transition">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path>
+                            </svg>
+                        </a>
+                        <a href="{% url 'users:profile' %}" class="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:text-primary-600 hover:bg-primary-50 transition">{{ user.get_full_name|default:user.username }}</a>
+                        <a href="{% url 'users:logout' %}" class="px-4 py-2 rounded-md text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 transition">Logout</a>
+                    {% else %}
+                        <a href="{% url 'users:login' %}" class="px-4 py-2 rounded-md text-sm font-medium text-primary-600 border border-primary-600 hover:bg-primary-50 transition">Login</a>
+                        <a href="{% url 'users:register' %}" class="px-4 py-2 rounded-md text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 transition">Register</a>
+                    {% endif %}
+                </div>
+                <div class="flex items-center md:hidden">
+                    <button @click="open = !open" class="p-2 rounded-md text-gray-600 hover:text-primary-600 hover:bg-primary-50">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path x-show="!open" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                            <path x-show="open" x-cloak stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div x-show="open" x-cloak class="md:hidden bg-white border-t">
+            <div class="px-2 pt-2 pb-3 space-y-1">
+                <a href="{% url 'catalog:book_list' %}" class="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-primary-600 hover:bg-primary-50">Catalog</a>
+                <a href="{% url 'catalog:author_list' %}" class="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-primary-600 hover:bg-primary-50">Authors</a>
+                <a href="{% url 'catalog:genre_list' %}" class="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-primary-600 hover:bg-primary-50">Genres</a>
+                {% if user.is_authenticated %}
+                    {% if user.is_staff_role %}
+                        <a href="{% url 'reports:staff_dashboard' %}" class="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-primary-600 hover:bg-primary-50">Staff Dashboard</a>
+                        <a href="{% url 'members:member_list' %}" class="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-primary-600 hover:bg-primary-50">Members</a>
+                        <a href="{% url 'circulation:active_loans' %}" class="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-primary-600 hover:bg-primary-50">Circulation</a>
+                        <a href="{% url 'acquisitions:suggestion_list' %}" class="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-primary-600 hover:bg-primary-50">Suggestions</a>
+                    {% else %}
+                        <a href="{% url 'members:patron_dashboard' %}" class="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-primary-600 hover:bg-primary-50">My Account</a>
+                        <a href="{% url 'acquisitions:suggestion_form' %}" class="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-primary-600 hover:bg-primary-50">Suggest a Book</a>
+                    {% endif %}
+                    <a href="{% url 'users:profile' %}" class="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-primary-600 hover:bg-primary-50">{{ user.get_full_name|default:user.username }}</a>
+                    <a href="{% url 'users:logout' %}" class="block px-3 py-2 rounded-md text-base font-medium text-primary-600 hover:bg-primary-50">Logout</a>
+                {% else %}
+                    <a href="{% url 'users:login' %}" class="block px-3 py-2 rounded-md text-base font-medium text-primary-600 hover:bg-primary-50">Login</a>
+                    <a href="{% url 'users:register' %}" class="block px-3 py-2 rounded-md text-base font-medium text-primary-600 hover:bg-primary-50">Register</a>
+                {% endif %}
+            </div>
+        </div>
+    </nav>
+
+    {% if messages %}
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full mt-4">
+            {% for message in messages %}
+                <div x-data="{ show: true }" x-show="show" x-transition
+                     class="mb-2 p-4 rounded-md flex items-center justify-between
+                     {% if message.tags == 'success' %}bg-green-50 border border-green-200 text-green-800
+                     {% elif message.tags == 'error' %}bg-red-50 border border-red-200 text-red-800
+                     {% elif message.tags == 'warning' %}bg-yellow-50 border border-yellow-200 text-yellow-800
+                     {% else %}bg-blue-50 border border-blue-200 text-blue-800{% endif %}">
+                    <div class="flex items-center gap-2">
+                        {% if message.tags == 'success' %}
+                            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>
+                        {% elif message.tags == 'error' %}
+                            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"></path></svg>
+                        {% elif message.tags == 'warning' %}
+                            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path></svg>
+                        {% else %}
+                            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path></svg>
+                        {% endif %}
+                        <span class="text-sm font-medium">{{ message }}</span>
+                    </div>
+                    <button @click="show = false" class="ml-4 p-1 rounded hover:bg-white/50">
+                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path></svg>
+                    </button>
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    <main class="flex-grow">
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer class="bg-gray-900 text-gray-300 mt-auto">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+                <div>
+                    <h3 class="text-white font-semibold mb-3">LibraSys</h3>
+                    <p class="text-sm text-gray-400">Modern Library Management System for efficient library operations.</p>
+                </div>
+                <div>
+                    <h3 class="text-white font-semibold mb-3">Catalog</h3>
+                    <ul class="space-y-2 text-sm">
+                        <li><a href="{% url 'catalog:book_list' %}" class="hover:text-white transition">Browse Books</a></li>
+                        <li><a href="{% url 'catalog:author_list' %}" class="hover:text-white transition">Authors</a></li>
+                        <li><a href="{% url 'catalog:genre_list' %}" class="hover:text-white transition">Genres</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h3 class="text-white font-semibold mb-3">Services</h3>
+                    <ul class="space-y-2 text-sm">
+                        <li><a href="{% url 'circulation:active_loans' %}" class="hover:text-white transition">Circulation</a></li>
+                        <li><a href="{% url 'fines:my_fines' %}" class="hover:text-white transition">Fines</a></li>
+                        <li><a href="{% url 'acquisitions:suggestion_form' %}" class="hover:text-white transition">Suggest a Book</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h3 class="text-white font-semibold mb-3">Account</h3>
+                    <ul class="space-y-2 text-sm">
+                        {% if user.is_authenticated %}
+                            {% if user.is_staff_role %}
+                                <li><a href="{% url 'reports:staff_dashboard' %}" class="hover:text-white transition">Staff Dashboard</a></li>
+                            {% else %}
+                                <li><a href="{% url 'members:patron_dashboard' %}" class="hover:text-white transition">My Account</a></li>
+                            {% endif %}
+                            <li><a href="{% url 'users:profile' %}" class="hover:text-white transition">Profile</a></li>
+                            <li><a href="{% url 'users:logout' %}" class="hover:text-white transition">Logout</a></li>
+                        {% else %}
+                            <li><a href="{% url 'users:login' %}" class="hover:text-white transition">Login</a></li>
+                            <li><a href="{% url 'users:register' %}" class="hover:text-white transition">Register</a></li>
+                        {% endif %}
+                    </ul>
+                </div>
+            </div>
+            <div class="border-t border-gray-800 mt-8 pt-6 text-center text-sm text-gray-500">
+                <p>&copy; {% now "Y" %} LibraSys Library Management System. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

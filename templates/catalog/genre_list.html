@@ -1,0 +1,56 @@
+{% extends 'base.html' %}
+
+{% block title %}Genres - LibraSys{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div class="mb-8">
+        <h1 class="text-2xl md:text-3xl font-bold text-gray-900">Browse by Genre</h1>
+        <p class="text-gray-500 mt-1">Explore our collection organized by genre</p>
+    </div>
+
+    {% if genres %}
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {% for genre in genres %}
+                <a href="{% url 'catalog:genre_detail' genre.pk %}"
+                   class="bg-white rounded-xl shadow-sm hover:shadow-md transition p-6 group">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <h3 class="text-lg font-semibold text-gray-900 group-hover:text-primary-600 transition">{{ genre.name }}</h3>
+                            {% if genre.dewey_decimal %}
+                                <p class="text-sm text-gray-500 mt-1">Dewey: {{ genre.dewey_decimal }}</p>
+                            {% endif %}
+                        </div>
+                        <div class="flex flex-col items-end">
+                            <span class="bg-primary-50 text-primary-700 px-3 py-1 rounded-full text-sm font-medium">
+                                {{ genre.book_count }} book{{ genre.book_count|pluralize }}
+                            </span>
+                            <svg class="w-5 h-5 text-gray-400 group-hover:text-primary-600 mt-2 transition" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                            </svg>
+                        </div>
+                    </div>
+                    {% if genre.description %}
+                        <p class="text-sm text-gray-500 mt-3 line-clamp-2">{{ genre.description }}</p>
+                    {% endif %}
+                    {% if genre.children.exists %}
+                        <div class="mt-3 flex flex-wrap gap-1">
+                            {% for child in genre.children.all %}
+                                <span class="bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full text-xs">{{ child.name }}</span>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </a>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="text-center py-16 bg-white rounded-xl shadow-sm">
+            <svg class="w-16 h-16 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"></path>
+            </svg>
+            <h3 class="text-lg font-medium text-gray-900 mb-2">No genres found</h3>
+            <p class="text-gray-500">Genres will appear here once they are added to the catalog.</p>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

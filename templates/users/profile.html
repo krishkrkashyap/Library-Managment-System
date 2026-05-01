@@ -1,0 +1,116 @@
+{% extends 'base.html' %}
+
+{% block title %}My Profile - LibraSys{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <h1 class="text-2xl md:text-3xl font-bold text-gray-900 mb-8">My Profile</h1>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div class="md:col-span-1">
+            <div class="bg-white rounded-xl shadow-sm p-6 text-center">
+                <div class="w-24 h-24 rounded-full bg-primary-100 flex items-center justify-center mx-auto mb-4">
+                    <span class="text-3xl text-primary-600 font-bold">{{ user.first_name|first|default:user.username|first }}{{ user.last_name|first|default:'' }}</span>
+                </div>
+                <h2 class="text-xl font-semibold text-gray-900">{{ user.get_full_name|default:user.username }}</h2>
+                <span class="inline-block mt-2 bg-primary-50 text-primary-700 px-3 py-1 rounded-full text-sm font-medium capitalize">
+                    {{ user.get_role_display }}
+                </span>
+            </div>
+        </div>
+
+        <div class="md:col-span-2">
+            <div class="bg-white rounded-xl shadow-sm p-6 mb-6">
+                <h2 class="text-lg font-semibold text-gray-900 mb-4">Account Information</h2>
+                <dl class="space-y-3">
+                    <div class="flex justify-between py-2 border-b border-gray-100">
+                        <dt class="text-sm text-gray-500">Username</dt>
+                        <dd class="text-sm font-medium text-gray-900">{{ user.username }}</dd>
+                    </div>
+                    <div class="flex justify-between py-2 border-b border-gray-100">
+                        <dt class="text-sm text-gray-500">Email</dt>
+                        <dd class="text-sm font-medium text-gray-900">{{ user.email|default:"Not provided" }}</dd>
+                    </div>
+                    <div class="flex justify-between py-2 border-b border-gray-100">
+                        <dt class="text-sm text-gray-500">Phone</dt>
+                        <dd class="text-sm font-medium text-gray-900">{{ user.phone_number|default:"Not provided" }}</dd>
+                    </div>
+                    <div class="flex justify-between py-2 border-b border-gray-100">
+                        <dt class="text-sm text-gray-500">Role</dt>
+                        <dd class="text-sm font-medium text-gray-900 capitalize">{{ user.get_role_display }}</dd>
+                    </div>
+                    <div class="flex justify-between py-2">
+                        <dt class="text-sm text-gray-500">Member Since</dt>
+                        <dd class="text-sm font-medium text-gray-900">{{ user.date_joined|date:"F j, Y" }}</dd>
+                    </div>
+                </dl>
+            </div>
+
+            {% if user.role == 'member' and user.member_profile %}
+                <div class="bg-white rounded-xl shadow-sm p-6 mb-6">
+                    <h2 class="text-lg font-semibold text-gray-900 mb-4">Membership Details</h2>
+                    <dl class="space-y-3">
+                        <div class="flex justify-between py-2 border-b border-gray-100">
+                            <dt class="text-sm text-gray-500">Membership ID</dt>
+                            <dd class="text-sm font-mono font-medium text-gray-900">{{ user.member_profile.membership_id }}</dd>
+                        </div>
+                        <div class="flex justify-between py-2 border-b border-gray-100">
+                            <dt class="text-sm text-gray-500">Category</dt>
+                            <dd class="text-sm font-medium text-gray-900">{{ user.member_profile.category.name }}</dd>
+                        </div>
+                        <div class="flex justify-between py-2 border-b border-gray-100">
+                            <dt class="text-sm text-gray-500">Status</dt>
+                            <dd class="text-sm font-medium">
+                                {% if user.member_profile.status == 'active' %}
+                                    <span class="text-green-600">Active</span>
+                                {% elif user.member_profile.status == 'expired' %}
+                                    <span class="text-red-600">Expired</span>
+                                {% elif user.member_profile.status == 'suspended' %}
+                                    <span class="text-red-600">Suspended</span>
+                                {% else %}
+                                    <span class="text-yellow-600">Pending</span>
+                                {% endif %}
+                            </dd>
+                        </div>
+                        <div class="flex justify-between py-2 border-b border-gray-100">
+                            <dt class="text-sm text-gray-500">Expires</dt>
+                            <dd class="text-sm font-medium text-gray-900">{{ user.member_profile.membership_expiry|date:"F j, Y"|default:"—" }}</dd>
+                        </div>
+                        <div class="flex justify-between py-2">
+                            <dt class="text-sm text-gray-500">Active Loans</dt>
+                            <dd class="text-sm font-medium text-gray-900">{{ user.member_profile.active_loans_count }}</dd>
+                        </div>
+                    </dl>
+                    <div class="mt-4">
+                        <a href="{% url 'members:patron_dashboard' %}" class="text-primary-600 hover:text-primary-700 text-sm font-medium">View My Dashboard &rarr;</a>
+                    </div>
+                </div>
+            {% endif %}
+
+            {% if user.is_staff_role %}
+                <div class="bg-white rounded-xl shadow-sm p-6">
+                    <h2 class="text-lg font-semibold text-gray-900 mb-4">Staff Quick Links</h2>
+                    <div class="grid grid-cols-2 gap-3">
+                        <a href="{% url 'reports:staff_dashboard' %}" class="bg-gray-50 hover:bg-gray-100 p-4 rounded-lg transition text-center">
+                            <svg class="w-6 h-6 text-primary-600 mx-auto mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
+                            <span class="text-sm font-medium text-gray-700">Dashboard</span>
+                        </a>
+                        <a href="{% url 'circulation:active_loans' %}" class="bg-gray-50 hover:bg-gray-100 p-4 rounded-lg transition text-center">
+                            <svg class="w-6 h-6 text-primary-600 mx-auto mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path></svg>
+                            <span class="text-sm font-medium text-gray-700">Circulation</span>
+                        </a>
+                        <a href="{% url 'members:member_list' %}" class="bg-gray-50 hover:bg-gray-100 p-4 rounded-lg transition text-center">
+                            <svg class="w-6 h-6 text-primary-600 mx-auto mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+                            <span class="text-sm font-medium text-gray-700">Members</span>
+                        </a>
+                        <a href="{% url 'acquisitions:suggestion_list' %}" class="bg-gray-50 hover:bg-gray-100 p-4 rounded-lg transition text-center">
+                            <svg class="w-6 h-6 text-primary-600 mx-auto mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path></svg>
+                            <span class="text-sm font-medium text-gray-700">Suggestions</span>
+                        </a>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

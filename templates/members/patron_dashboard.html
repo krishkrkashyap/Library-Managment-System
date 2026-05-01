@@ -1,0 +1,168 @@
+{% extends 'base.html' %}
+{% load humanize %}
+
+{% block title %}My Dashboard - LibraSys{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div class="mb-8">
+        <h1 class="text-2xl md:text-3xl font-bold text-gray-900">Welcome, {{ user.get_full_name|default:user.username }}</h1>
+        <p class="text-gray-500 mt-1">Membership ID: <span class="font-mono">{{ member.membership_id }}</span></p>
+    </div>
+
+    {% if not member.can_borrow %}
+        <div class="bg-red-50 border border-red-200 rounded-lg p-4 mb-6 flex items-start gap-3">
+            <svg class="w-5 h-5 text-red-500 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"></path></svg>
+            <div>
+                <p class="text-sm font-medium text-red-800">Borrowing Restricted</p>
+                <p class="text-sm text-red-600">
+                    {% if member.is_blocked %}Your account is blocked.{% elif member.status != 'active' %}Your membership is not active.{% elif member.total_fines >= member.category.max_fine_amount %}Your fines exceed the allowed limit.{% else %}You have reached your borrowing limit.{% endif %}
+                </p>
+            </div>
+        </div>
+    {% endif %}
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        <a href="{% url 'circulation:active_loans' %}" class="bg-white rounded-xl shadow-sm p-6 hover:shadow-md transition">
+            <div class="flex items-center gap-4">
+                <div class="bg-blue-100 p-3 rounded-lg">
+                    <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
+                    </svg>
+                </div>
+                <div>
+                    <p class="text-2xl font-bold text-gray-900">{{ borrow_records.count }}</p>
+                    <p class="text-sm text-gray-500">Current Loans</p>
+                </div>
+            </div>
+        </a>
+
+        <a href="{% url 'notifications:notification_list' %}" class="bg-white rounded-xl shadow-sm p-6 hover:shadow-md transition">
+            <div class="flex items-center gap-4">
+                <div class="bg-yellow-100 p-3 rounded-lg">
+                    <svg class="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 1h4"></path>
+                    </svg>
+                </div>
+                <div>
+                    <p class="text-2xl font-bold text-gray-900">{{ holds.count }}</p>
+                    <p class="text-sm text-gray-500">Active Holds</p>
+                </div>
+            </div>
+        </a>
+
+        <a href="{% url 'fines:my_fines' %}" class="bg-white rounded-xl shadow-sm p-6 hover:shadow-md transition">
+            <div class="flex items-center gap-4">
+                <div class="bg-red-100 p-3 rounded-lg">
+                    <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                </div>
+                <div>
+                    <p class="text-2xl font-bold {% if total_fines > 0 %}text-red-600{% else %}text-gray-900{% endif %}">${{ total_fines|floatformat:2 }}</p>
+                    <p class="text-sm text-gray-500">Outstanding Fines</p>
+                </div>
+            </div>
+        </a>
+
+        <div class="bg-white rounded-xl shadow-sm p-6">
+            <div class="flex items-center gap-4">
+                <div class="bg-green-100 p-3 rounded-lg">
+                    <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                </div>
+                <div>
+                    <p class="text-2xl font-bold text-gray-900">{{ member.category.max_books_allowed|add:""|floatformat:0 }}</p>
+                    <p class="text-sm text-gray-500">Borrowing Limit</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {% if borrow_records %}
+            <div class="bg-white rounded-xl shadow-sm">
+                <div class="flex items-center justify-between p-6 border-b border-gray-100">
+                    <h2 class="text-lg font-semibold text-gray-900">Current Loans</h2>
+                    <span class="text-sm text-gray-500">{{ borrow_records.count }} of {{ member.category.max_books_allowed }}</span>
+                </div>
+                <div class="divide-y divide-gray-100">
+                    {% for record in borrow_records %}
+                        <div class="p-4 flex items-center justify-between hover:bg-gray-50">
+                            <div>
+                                <a href="{% url 'catalog:book_detail' record.book_instance.book.slug %}" class="font-medium text-gray-900 hover:text-primary-600">{{ record.book_instance.book.title }}</a>
+                                <p class="text-xs text-gray-500 mt-1">Due: {{ record.due_date|date:"M d, Y" }}</p>
+                            </div>
+                            {% if record.is_overdue %}
+                                <span class="bg-red-100 text-red-800 px-2 py-1 rounded-full text-xs font-medium">Overdue</span>
+                            {% else %}
+                                <span class="bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full text-xs font-medium">On Loan</span>
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        {% else %}
+            <div class="bg-white rounded-xl shadow-sm p-8 text-center">
+                <svg class="w-12 h-12 text-gray-400 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
+                </svg>
+                <p class="text-gray-500">No current loans</p>
+                <a href="{% url 'catalog:book_list' %}" class="text-primary-600 hover:text-primary-700 text-sm font-medium mt-2 inline-block">Browse Catalog</a>
+            </div>
+        {% endif %}
+
+        {% if holds %}
+            <div class="bg-white rounded-xl shadow-sm">
+                <div class="flex items-center justify-between p-6 border-b border-gray-100">
+                    <h2 class="text-lg font-semibold text-gray-900">Active Holds</h2>
+                    <span class="text-sm text-gray-500">{{ holds.count }} hold{{ holds.count|pluralize }}</span>
+                </div>
+                <div class="divide-y divide-gray-100">
+                    {% for hold in holds %}
+                        <div class="p-4 flex items-center justify-between hover:bg-gray-50">
+                            <div>
+                                <a href="{% url 'catalog:book_detail' hold.book.slug %}" class="font-medium text-gray-900 hover:text-primary-600">{{ hold.book.title }}</a>
+                                <p class="text-xs text-gray-500 mt-1">Placed: {{ hold.placed_date|date:"M d, Y" }}</p>
+                            </div>
+                            {% if hold.status == 'ready' %}
+                                <span class="bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs font-medium">Ready for Pickup</span>
+                            {% else %}
+                                <span class="bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full text-xs font-medium">Pending</span>
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        {% else %}
+            <div class="bg-white rounded-xl shadow-sm p-8 text-center">
+                <svg class="w-12 h-12 text-gray-400 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 1h4"></path>
+                </svg>
+                <p class="text-gray-500">No active holds</p>
+            </div>
+        {% endif %}
+    </div>
+
+    {% if fines %}
+        <div class="bg-white rounded-xl shadow-sm mt-6">
+            <div class="flex items-center justify-between p-6 border-b border-gray-100">
+                <h2 class="text-lg font-semibold text-gray-900">Outstanding Fines</h2>
+                <a href="{% url 'fines:my_fines' %}" class="text-sm text-primary-600 hover:text-primary-700 font-medium">View All &rarr;</a>
+            </div>
+            <div class="divide-y divide-gray-100">
+                {% for fine in fines %}
+                    <div class="p-4 flex items-center justify-between hover:bg-gray-50">
+                        <div>
+                            <p class="font-medium text-gray-900">{{ fine.borrow_record.book_instance.book.title }}</p>
+                            <p class="text-xs text-gray-500 mt-1">{{ fine.get_fine_type_display }} fine</p>
+                        </div>
+                        <p class="font-semibold text-red-600">${{ fine.amount|floatformat:2 }}</p>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

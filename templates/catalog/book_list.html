@@ -1,0 +1,168 @@
+{% extends 'base.html' %}
+{% load humanize %}
+
+{% block title %}Catalog - LibraSys{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div class="flex flex-col lg:flex-row gap-8">
+        <aside class="lg:w-64 flex-shrink-0">
+            <div class="bg-white rounded-xl shadow-sm p-6 sticky top-24" x-data="{ genreOpen: false, authorOpen: false }">
+                <h2 class="text-lg font-semibold text-gray-900 mb-4">Filters</h2>
+                <form method="get" action="{% url 'catalog:book_list' %}" id="filter-form">
+                    <div class="mb-4">
+                        <input type="text" name="search" value="{{ search_query }}"
+                               placeholder="Search..."
+                               class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+                               hx-get="{% url 'catalog:book_list' %}"
+                               hx-trigger="input changed delay:500ms, search"
+                               hx-target="#book-results"
+                               hx-swap="innerHTML">
+                    </div>
+
+                    <div class="mb-4">
+                        <button type="button" @click="genreOpen = !genreOpen"
+                                class="flex items-center justify-between w-full text-sm font-medium text-gray-700">
+                            Genre
+                            <svg class="w-4 h-4 transition-transform" :class="{ 'rotate-180': genreOpen }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                            </svg>
+                        </button>
+                        <div x-show="genreOpen" x-cloak class="mt-2 space-y-2 max-h-48 overflow-y-auto">
+                            {% for genre in genres %}
+                                <label class="flex items-center gap-2 text-sm">
+                                    <input type="checkbox" name="genre" value="{{ genre.pk }}"
+                                           {% if genre.pk in filter.data.genre|default:''|make_list %}checked{% endif %}
+                                           class="rounded border-gray-300 text-primary-600 focus:ring-primary-500">
+                                    <span class="text-gray-600">{{ genre.name }}</span>
+                                </label>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <button type="button" @click="authorOpen = !authorOpen"
+                                class="flex items-center justify-between w-full text-sm font-medium text-gray-700">
+                            Author
+                            <svg class="w-4 h-4 transition-transform" :class="{ 'rotate-180': authorOpen }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                            </svg>
+                        </button>
+                        <div x-show="authorOpen" x-cloak class="mt-2 max-h-48 overflow-y-auto">
+                            <select name="author"
+                                    class="w-full text-sm px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500">
+                                <option value="">All Authors</option>
+                                {% for author in filter.form.author.field.queryset %}
+                                    <option value="{{ author.pk }}"
+                                            {% if filter.data.author == author.pk|stringformat:"s" %}selected{% endif %}>
+                                        {{ author.full_name }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="flex items-center gap-2 text-sm">
+                            <input type="checkbox" name="available" value="true"
+                                   {% if filter.data.available == 'true' %}checked{% endif %}
+                                   class="rounded border-gray-300 text-primary-600 focus:ring-primary-500">
+                            <span class="text-gray-600">Available Only</span>
+                        </label>
+                    </div>
+
+                    <button type="submit"
+                            class="w-full bg-primary-600 hover:bg-primary-700 text-white py-2 px-4 rounded-md text-sm font-medium transition">
+                        Apply Filters
+                    </button>
+                    <a href="{% url 'catalog:book_list' %}"
+                       class="block w-full text-center mt-2 text-sm text-gray-500 hover:text-gray-700">
+                        Clear All
+                    </a>
+                </form>
+            </div>
+        </aside>
+
+        <div class="flex-grow" id="book-results">
+            <div class="flex items-center justify-between mb-6">
+                <p class="text-gray-600">
+                    <span class="font-medium text-gray-900">{{ books|length }}</span> books found
+                    {% if search_query %} for "<span class="font-medium">{{ search_query }}</span>"{% endif %}
+                </p>
+                {% if user.is_librarian %}
+                    <div class="flex gap-2">
+                        <a href="{% url 'catalog:book_add' %}"
+                           class="bg-primary-600 hover:bg-primary-700 text-white px-4 py-2 rounded-md text-sm font-medium transition flex items-center gap-2">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                            </svg>
+                            Add Book
+                        </a>
+                        <a href="{% url 'catalog:isbn_import' %}"
+                           class="bg-white hover:bg-gray-50 text-gray-700 px-4 py-2 rounded-md text-sm font-medium transition border border-gray-300">
+                            Import ISBN
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+
+            {% if books %}
+                <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+                    {% for book in books %}
+                        {% include 'components/book_card.html' with book=book %}
+                    {% endfor %}
+                </div>
+
+                {% if is_pag %}
+                    <div class="mt-8 flex items-center justify-between">
+                        <div>
+                            <p class="text-sm text-gray-700">
+                                Showing <span class="font-medium">{{ page_obj.start_index }}</span> to
+                                <span class="font-medium">{{ page_obj.end_index }}</span> of
+                                <span class="font-medium">{{ paginator.count }}</span> results
+                            </p>
+                        </div>
+                        <nav class="flex items-center gap-2">
+                            {% if page_obj.has_previous %}
+                                <a href="?page=1{% if search_query %}&search={{ search_query }}{% endif %}"
+                                   class="px-3 py-2 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 border border-gray-300 transition">
+                                    First
+                                </a>
+                                <a href="?page={{ page_obj.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}"
+                                   class="px-3 py-2 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 border border-gray-300 transition">
+                                    Previous
+                                </a>
+                            {% endif %}
+                            <span class="px-3 py-2 rounded-md text-sm font-medium bg-primary-600 text-white">
+                                {{ page_obj.number }}
+                            </span>
+                            {% if page_obj.has_next %}
+                                <a href="?page={{ page_obj.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}"
+                                   class="px-3 py-2 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 border border-gray-300 transition">
+                                    Next
+                                </a>
+                                <a href="?page={{ paginator.num_pages }}{% if search_query %}&search={{ search_query }}{% endif %}"
+                                   class="px-3 py-2 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 border border-gray-300 transition">
+                                    Last
+                                </a>
+                            {% endif %}
+                        </nav>
+                    </div>
+                {% endif %}
+            {% else %}
+                <div class="text-center py-16 bg-white rounded-xl shadow-sm">
+                    <svg class="w-16 h-16 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
+                    </svg>
+                    <h3 class="text-lg font-medium text-gray-900 mb-2">No books found</h3>
+                    <p class="text-gray-500 mb-6">Try adjusting your search or filter criteria.</p>
+                    <a href="{% url 'catalog:book_list' %}"
+                       class="text-primary-600 hover:text-primary-700 font-medium">
+                        Clear all filters
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

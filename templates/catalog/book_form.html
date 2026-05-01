@@ -1,0 +1,152 @@
+{% extends 'base.html' %}
+{% load humanize %}
+
+{% block title %}{% if object.pk %}Edit{% else %}Add{% endif %} Book - LibraSys{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <nav class="flex items-center gap-2 text-sm text-gray-500 mb-6">
+        <a href="{% url 'catalog:book_list' %}" class="hover:text-primary-600 transition">Catalog</a>
+        <span>/</span>
+        {% if object.pk %}
+            <a href="{% url 'catalog:book_detail' object.slug %}" class="hover:text-primary-600 transition">{{ object.title }}</a>
+            <span>/</span>
+            <span class="text-gray-900">Edit</span>
+        {% else %}
+            <span class="text-gray-900">Add Book</span>
+        {% endif %}
+    </nav>
+
+    <div class="bg-white rounded-xl shadow-sm p-6">
+        <h1 class="text-2xl font-bold text-gray-900 mb-6">
+            {% if object.pk %}Edit Book{% else %}Add New Book{% endif %}
+        </h1>
+
+        <form method="post" enctype="multipart/form-data" class="space-y-6">
+            {% csrf_token %}
+
+            {% if form.errors %}
+                <div class="bg-red-50 border border-red-200 rounded-lg p-4">
+                    <div class="flex items-center gap-2 mb-2">
+                        <svg class="w-5 h-5 text-red-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"></path></svg>
+                        <h3 class="text-sm font-medium text-red-800">Please correct the errors below</h3>
+                    </div>
+                </div>
+            {% endif %}
+
+            <div>
+                <label for="{{ form.title.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">Title <span class="text-red-500">*</span></label>
+                {{ form.title }}
+                {% if form.title.errors %}<p class="mt-1 text-sm text-red-600">{{ form.title.errors.0 }}</p>{% endif %}
+            </div>
+
+            <div>
+                <label for="{{ form.subtitle.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">Subtitle</label>
+                {{ form.subtitle }}
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                    <label for="{{ form.isbn_10.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">ISBN-10</label>
+                    {{ form.isbn_10 }}
+                </div>
+                <div>
+                    <label for="{{ form.isbn_13.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">ISBN-13</label>
+                    {{ form.isbn_13 }}
+                </div>
+            </div>
+
+            <div>
+                <label for="{{ form.authors.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">Authors <span class="text-red-500">*</span></label>
+                {{ form.authors }}
+                <p class="mt-1 text-xs text-gray-500">Hold Ctrl/Cmd to select multiple</p>
+            </div>
+
+            <div>
+                <label for="{{ form.publisher.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">Publisher</label>
+                {{ form.publisher }}
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div>
+                    <label for="{{ form.publish_date.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">Publish Date</label>
+                    {{ form.publish_date }}
+                </div>
+                <div>
+                    <label for="{{ form.edition.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">Edition</label>
+                    {{ form.edition }}
+                </div>
+                <div>
+                    <label for="{{ form.pages.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">Pages</label>
+                    {{ form.pages }}
+                </div>
+            </div>
+
+            <div>
+                <label for="{{ form.genres.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">Genres</label>
+                {{ form.genres }}
+                <p class="mt-1 text-xs text-gray-500">Hold Ctrl/Cmd to select multiple</p>
+            </div>
+
+            <div>
+                <label for="{{ form.languages.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">Languages</label>
+                {{ form.languages }}
+            </div>
+
+            <div>
+                <label for="{{ form.description.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                {{ form.description }}
+            </div>
+
+            <div>
+                <label for="{{ form.cover_image.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">Cover Image</label>
+                {{ form.cover_image }}
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                    <label for="{{ form.dewey_decimal.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">Dewey Decimal</label>
+                    {{ form.dewey_decimal }}
+                </div>
+                <div>
+                    <label for="{{ form.lc_classification.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">LC Classification</label>
+                    {{ form.lc_classification }}
+                </div>
+            </div>
+
+            <div>
+                <label for="{{ form.subject_keywords.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">Subject Keywords</label>
+                {{ form.subject_keywords }}
+                <p class="mt-1 text-xs text-gray-500">Comma-separated keywords</p>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div>
+                    <label for="{{ form.total_copies.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">Total Copies</label>
+                    {{ form.total_copies }}
+                </div>
+                <div>
+                    <label for="{{ form.available_copies.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">Available Copies</label>
+                    {{ form.available_copies }}
+                </div>
+                <div class="flex items-end">
+                    <label class="flex items-center gap-2">
+                        {{ form.is_active }}
+                        <span class="text-sm text-gray-700">Active</span>
+                    </label>
+                </div>
+            </div>
+
+            <div class="flex gap-3 pt-4">
+                <button type="submit" class="bg-primary-600 hover:bg-primary-700 text-white px-6 py-2.5 rounded-lg font-medium transition">
+                    {% if object.pk %}Save Changes{% else %}Add Book{% endif %}
+                </button>
+                <a href="{% if object.pk %}{% url 'catalog:book_detail' object.slug %}{% else %}{% url 'catalog:book_list' %}{% endif %}"
+                   class="bg-white hover:bg-gray-50 text-gray-700 px-6 py-2.5 rounded-lg font-medium transition border border-gray-300">
+                    Cancel
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

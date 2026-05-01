@@ -1,0 +1,109 @@
+{% extends 'base.html' %}
+
+{% block title %}Import Book by ISBN - LibraSys{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <nav class="flex items-center gap-2 text-sm text-gray-500 mb-6">
+        <a href="{% url 'catalog:book_list' %}" class="hover:text-primary-600 transition">Catalog</a>
+        <span>/</span>
+        <span class="text-gray-900">Import by ISBN</span>
+    </nav>
+
+    <div class="bg-white rounded-xl shadow-sm p-6 mb-6">
+        <h1 class="text-2xl font-bold text-gray-900 mb-2">Import Book by ISBN</h1>
+        <p class="text-gray-500 mb-6">Enter an ISBN to fetch book data from Google Books and add it to your catalog.</p>
+
+        <form method="post" class="space-y-4">
+            {% csrf_token %}
+            <div class="flex gap-3">
+                <input type="text" name="isbn" value="{{ isbn|default:'' }}"
+                       placeholder="Enter ISBN-10 or ISBN-13"
+                       class="flex-grow px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+                       required>
+                <button type="submit"
+                        class="bg-primary-600 hover:bg-primary-700 text-white px-6 py-2.5 rounded-lg font-medium transition flex items-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                    </svg>
+                    Search
+                </button>
+            </div>
+        </form>
+    </div>
+
+    {% if book_data %}
+        <div class="bg-white rounded-xl shadow-sm p-6">
+            <div class="flex items-center justify-between mb-6">
+                <h2 class="text-lg font-semibold text-gray-900">Book Found</h2>
+                <span class="bg-green-100 text-green-800 px-3 py-1 rounded-full text-xs font-medium">Ready to Import</span>
+            </div>
+
+            <form method="post" action="{% url 'catalog:isbn_import_create' %}" class="space-y-4">
+                {% csrf_token %}
+                <input type="hidden" name="title" value="{{ book_data.title }}">
+                <input type="hidden" name="authors" value="{{ book_data.authors }}">
+                <input type="hidden" name="publisher" value="{{ book_data.publisher }}">
+                <input type="hidden" name="publish_date" value="{{ book_data.publish_date }}">
+                <input type="hidden" name="description" value="{{ book_data.description }}">
+                <input type="hidden" name="pages" value="{{ book_data.pages }}">
+                <input type="hidden" name="isbn_10" value="{{ book_data.isbn_10 }}">
+                <input type="hidden" name="isbn_13" value="{{ book_data.isbn_13 }}">
+                <input type="hidden" name="cover_url" value="{{ book_data.cover_url }}">
+                <input type="hidden" name="categories" value="{{ book_data.categories }}">
+
+                {% if book_data.cover_url %}
+                    <div class="flex gap-4 mb-4">
+                        <img src="{{ book_data.cover_url }}" alt="Cover" class="w-24 h-36 object-cover rounded-lg shadow-sm">
+                        <div>
+                            <h3 class="font-semibold text-gray-900">{{ book_data.title }}</h3>
+                            {% if book_data.authors %}
+                                <p class="text-sm text-gray-500">by {{ book_data.authors }}</p>
+                            {% endif %}
+                            {% if book_data.publisher %}
+                                <p class="text-sm text-gray-500">{{ book_data.publisher }}</p>
+                            {% endif %}
+                            {% if book_data.publish_date %}
+                                <p class="text-sm text-gray-500">{{ book_data.publish_date }}</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                {% endif %}
+
+                <div class="bg-gray-50 rounded-lg p-4 space-y-2 text-sm">
+                    {% if book_data.isbn_13 %}
+                        <p><span class="text-gray-500">ISBN-13:</span> <span class="font-mono text-gray-900">{{ book_data.isbn_13 }}</span></p>
+                    {% endif %}
+                    {% if book_data.isbn_10 %}
+                        <p><span class="text-gray-500">ISBN-10:</span> <span class="font-mono text-gray-900">{{ book_data.isbn_10 }}</span></p>
+                    {% endif %}
+                    {% if book_data.pages %}
+                        <p><span class="text-gray-500">Pages:</span> <span class="text-gray-900">{{ book_data.pages }}</span></p>
+                    {% endif %}
+                    {% if book_data.categories %}
+                        <p><span class="text-gray-500">Categories:</span> <span class="text-gray-900">{{ book_data.categories }}</span></p>
+                    {% endif %}
+                </div>
+
+                {% if book_data.description %}
+                    <div>
+                        <p class="text-sm font-medium text-gray-700 mb-1">Description</p>
+                        <p class="text-sm text-gray-600 line-clamp-4">{{ book_data.description }}</p>
+                    </div>
+                {% endif %}
+
+                <div class="flex gap-3 pt-4">
+                    <button type="submit"
+                            class="bg-primary-600 hover:bg-primary-700 text-white px-6 py-2.5 rounded-lg font-medium transition">
+                        Import to Catalog
+                    </button>
+                    <a href="{% url 'catalog:isbn_import' %}"
+                       class="bg-white hover:bg-gray-50 text-gray-700 px-6 py-2.5 rounded-lg font-medium transition border border-gray-300">
+                        Search Another
+                    </a>
+                </div>
+            </form>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

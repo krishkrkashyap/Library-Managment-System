@@ -1,0 +1,75 @@
+{% extends 'base.html' %}
+
+{% block title %}Overdue Books - LibraSys{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div class="flex items-center justify-between mb-8">
+        <div>
+            <h1 class="text-2xl md:text-3xl font-bold text-gray-900">Overdue Books</h1>
+            <p class="text-gray-500 mt-1">Books past their due date</p>
+        </div>
+        <a href="{% url 'circulation:active_loans' %}"
+           class="bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 px-4 py-2 rounded-lg text-sm font-medium transition">
+            View All Loans
+        </a>
+    </div>
+
+    {% if overdue %}
+        <div class="bg-white rounded-xl shadow-sm overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm">
+                    <thead class="bg-gray-50 border-b border-gray-200">
+                        <tr>
+                            <th class="text-left py-4 px-6 font-medium text-gray-500">Book</th>
+                            <th class="text-left py-4 px-6 font-medium text-gray-500">Member</th>
+                            <th class="text-left py-4 px-6 font-medium text-gray-500 hidden md:table-cell">Due Date</th>
+                            <th class="text-left py-4 px-6 font-medium text-gray-500 hidden sm:table-cell">Days Overdue</th>
+                            <th class="text-left py-4 px-6 font-medium text-gray-500">Est. Fine</th>
+                            <th class="text-right py-4 px-6 font-medium text-gray-500">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-100">
+                        {% for loan in overdue %}
+                            <tr class="hover:bg-gray-50 transition">
+                                <td class="py-4 px-6">
+                                    <a href="{% url 'catalog:book_detail' loan.book_instance.book.slug %}" class="font-medium text-gray-900 hover:text-primary-600">
+                                        {{ loan.book_instance.book.title }}
+                                    </a>
+                                </td>
+                                <td class="py-4 px-6">
+                                    <a href="{% url 'members:member_detail' loan.member.pk %}" class="text-primary-600 hover:text-primary-700">
+                                        {{ loan.member.user.get_full_name }}
+                                    </a>
+                                    <p class="text-xs text-gray-500 mt-0.5">{{ loan.member.phone_number|default:"No phone" }}</p>
+                                </td>
+                                <td class="py-4 px-6 text-gray-600 hidden md:table-cell">{{ loan.due_date|date:"M d, Y" }}</td>
+                                <td class="py-4 px-6 hidden sm:table-cell">
+                                    <span class="bg-red-100 text-red-800 px-2 py-1 rounded-full text-xs font-medium">
+                                        {{ loan.overdue_days }} day{{ loan.overdue_days|pluralize }}
+                                    </span>
+                                </td>
+                                <td class="py-4 px-6 font-semibold text-red-600">${{ loan.fine_amount|floatformat:2 }}</td>
+                                <td class="py-4 px-6 text-right">
+                                    <a href="{% url 'circulation:return_book' %}"
+                                       class="text-green-600 hover:text-green-700 text-xs font-medium">
+                                        Process Return
+                                    </a>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    {% else %}
+        <div class="text-center py-16 bg-white rounded-xl shadow-sm">
+            <svg class="w-16 h-16 text-green-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+            <h3 class="text-lg font-medium text-gray-900 mb-2">No Overdue Books</h3>
+            <p class="text-gray-500">All borrowed books are within their due dates.</p>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
